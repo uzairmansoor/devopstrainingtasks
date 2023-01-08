@@ -1,0 +1,28 @@
+Commands:
+
+Bucket URL:
+https://iacartifacts-devops-youtube-tutorials-us-east-1-355986150263.s3.amazonaws.com/code/cfn/services/s3/
+
+Bucket URI:
+s3://iacartifacts-devops-youtube-tutorials-us-east-1-355986150263/code/cfn/services/s3/
+
+Upload objects to S3 Bucket:
+aws s3 sync . s3://iacartifacts-devops-youtube-tutorials-us-east-1-355986150263/code/cfn/services/s3/
+
+Validate Cfn template:
+aws cloudformation validate-template --template-body file://s3_Bucket.yaml
+
+Create Cfn template:
+aws cloudformation create-stack --stack-name uzair-poc-dev-tutorialstask1-us-east-1 --template-body file://s3-app-main.yml 
+
+Create Cfn template by defining the parameters:
+aws cloudformation create-stack --stack-name onboard-poc-dev-tutorialstask1-us-east-1 --template-body file://rds-app.yml --parameters
+ParameterKey=dbUsername,ParameterValue=uzair ParameterKey=dbPassword,ParameterValue=uzair123 --capabilities CAPABILITY_NAMED_IAM
+
+Update Cfn Stack
+aws cloudformation update-stack --stack-name uzair-poc-dev-trainingtask6 --template-body file://cloudfront-app-main.yml --disable-rollback
+
+aws cloudformation update-stack --stack-name mystack --template-url https://s3.amazonaws.com/sample/updated.template
+--parameters ParameterKey=VPCID,ParameterValue=SampleVPCID ParameterKey=SubnetIDs,ParameterValue=SampleSubnetID1\\,SampleSubnetID2
+
+
