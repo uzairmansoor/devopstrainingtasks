@@ -1,0 +1,87 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Driver template for deploying ec2 in vpc
+Parameters:
+  project:
+    Type: String
+    Description: Project name
+    Default: devopstraining
+  app:
+    Type: String
+    Description: Application name
+    Default: app
+  env:
+    Type: String
+    Description: Environment name
+    AllowedValues:
+      - dev
+      - qa
+      - uat
+      - prod
+    Default: dev
+  s3ArtifactPath:
+    Type: String
+    Description: "Artifact Bucket Path"
+    Default: "https://uzair-cf-iacartifacts-app-devops-us-east-1-355986150263.s3.amazonaws.com/code/cfn/services"
+    
+Resources:
+
+  securityGroup:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${s3ArtifactPath}/ec2/securitygroup.yml"
+      Parameters:
+        project: !Ref project
+        app: !Ref app
+        env: !Ref env 
+        publicSecurityGroupCidr: 0.0.0.0/0
+        vpcId: vpc-08abc6e7bf05d8c86
+
+  ec2:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${s3ArtifactPath}/ec2/ec2-app.yml"
+      Parameters:    
+        project: !Ref project
+        app: !Ref app
+        env: !Ref env
+        webServerSecurityGroup: !GetAtt securityGroup.Outputs.publicSecurityGroupId
+        imageId: 'ami-0b5eea76982371e91'
+        instanceType: t2.micro
+        userData: Hi, I am Web server 1
+        exportedEC2Name: ec2-1
+        availabilityZone: us-east-1a
+        subnetId: subnet-0dfac643c6542f448
+
+  secondEc2:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub "${s3ArtifactPath}/ec2/ec2-app.yml"
+      Parameters:    
+        project: !Ref project
+        app: !Ref app
+        env: !Ref env
+        webServerSecurityGroup: !GetAtt securityGroup.Outputs.publicSecurityGroupId
+        imageId: 'ami-0b5eea76982371e91'
+        instanceType: t2.micro
+        userData: Hi, I am Web server 2
+        exportedEC2Name: ec2-2
+        availabilityZone: us-east-1a
+        subnetId: subnet-0dfac643c6542f448
+        
+Outputs:
+  securityGroupStack:
+    Value: !Ref securityGroup
+    Export:
+      Name: !Sub '${project}-${app}-${env}-securityGroupStack'
+  
+  ec2Stack:
+    Value: !Ref ec2
+    Export:
+      Name: !Sub '${project}-${app}-${env}-ec2Stack'
+  
+  secondEc2Stack:
+    Value: !Ref secondEc2
+    Export:
+      Name: !Sub '${project}-${app}-${env}-secondEc2Stack'
+
+      
