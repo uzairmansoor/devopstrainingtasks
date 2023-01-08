@@ -1,0 +1,52 @@
+AWSTemplateFormatVersion : "2010-09-09"
+Description: "Main CF STack for s3 Bucket Encryption & Versioning"
+
+Parameters:
+  
+  project:
+    Type: String
+    Description:  Project Name
+    Default: poc
+
+  app:
+    Type: String
+    Description:  Application Name
+    Default: s3
+    
+  env:
+    Type: String
+    AllowedValues: 
+     - prod
+     - dev
+     - qa
+     - uat
+    Description:  Environment Name
+    Default: dev
+  
+  s3ArtifactPath:
+    Type: String
+    Default: "https://iacartifacts-devops-youtube-tutorials-us-east-1-355986150263.s3.amazonaws.com/code/cfn/services"
+    Description: "Artifact Bucket Path"
+
+Resources:
+  s3BucketWithEncryption:
+    Type: AWS::CloudFormation::Stack
+    Description: "Main CF STack for s3 Bucket Encryption & Versioning"
+    Properties:
+      TemplateURL:              !Sub "${s3ArtifactPath}/s3/s3-app.yml"
+      Parameters:
+        bucketName:             "s3bucketusingcloudformation"
+        project:                !Ref project
+        app:                    !Ref app
+        env:                    !Ref env
+        versioningStatus:       "Enabled"
+        blockPublicAcls:        true
+        blockPublicPolicy:      true
+        ignorePublicAcls:       true
+        restrictPublicBuckets:  true
+
+Outputs:
+  s3BucketStack:
+    Value: !Ref s3BucketWithEncryption
+    Export:
+      Name: !Sub "${project}-${app}-${env}-s3BucketStack"

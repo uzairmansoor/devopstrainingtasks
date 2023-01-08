@@ -1,0 +1,114 @@
+AWSTemplateFormatVersion : "2010-09-09"
+Description: "S3 Bucket Encryption & Versioning & S3 Bucket Policy"
+
+Parameters:
+
+  bucketName:
+    Type: String
+    Description: Bucket name
+
+  project:
+    Type: String
+    Description:  Project Name
+
+  app:
+    Type: String
+    Description:  Application Name
+    
+  env:
+    Type: String
+    AllowedValues: 
+     - prod
+     - dev
+     - qa
+     - uat
+    Description:  Environment Name
+
+  versioningStatus:
+    Type: String
+    Description: Status of Versioning
+    AllowedValues:
+      - Enabled
+      - Suspended
+  
+  blockPublicAcls:
+    Type: String
+    Description: Block Public ACLs 
+    AllowedValues:
+      - true
+      - false
+  
+  blockPublicPolicy:
+    Type: String
+    Description: Block Public ACLs 
+    AllowedValues:
+      - true
+      - false
+
+  ignorePublicAcls:
+    Type: String
+    Description: Block Public ACLs 
+    AllowedValues:
+      - true
+      - false
+
+  restrictPublicBuckets:
+    Type: String
+    Description: Block Public ACLs 
+    AllowedValues:
+      - true
+      - false
+      
+Resources:
+
+  s3Bucket:
+    Type: 'AWS::S3::Bucket'
+    DeletionPolicy: Delete
+    Properties:
+      BucketName: !Sub ${project}-${app}-${env}-${bucketName}-${AWS::Region}-${AWS::AccountId}
+      VersioningConfiguration:
+        Status: Enabled
+      AccessControl: PublicRead
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: !Ref blockPublicAcls
+        BlockPublicPolicy: !Ref blockPublicPolicy
+        IgnorePublicAcls: !Ref ignorePublicAcls
+        RestrictPublicBuckets: !Ref restrictPublicBuckets
+      WebsiteConfiguration:
+        IndexDocument: index.html
+        ErrorDocument: error.html
+      Tags:
+        - Key: name
+          Value: !Sub "${project}-${app}-${env}-s3Bucket"
+        - Key: project
+          Value: !Ref project
+        - Key: app
+          Value: !Ref app
+        - Key: env
+          Value: !Ref env
+              
+  bucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref s3Bucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Id: ObjectPolicy
+        Statement:
+        - Sid: DenyUnEncryptedObjectUploads
+          Effect: Deny
+          Principal:
+            AWS: !Sub ${AWS::AccountId}
+          Action: s3:PutObject
+          Resource: !Sub arn:aws:s3:::${s3Bucket}/*
+          Condition:
+            'Null':
+              s3:x-amz-server-side-encryption: true
+
+Outputs:
+  s3BucketName:
+    Value: !Ref s3Bucket
+    Export:
+      Name: !Sub "${project}-${app}-${env}-s3Bucket"
+
+      
