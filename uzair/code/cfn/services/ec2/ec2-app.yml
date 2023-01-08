@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: CloudFormation template for ec2 instance
+Parameters:
+  project:
+    Type: String
+    Description: Project name
+  app:
+    Type: String
+    Description: Application name
+  env:
+    Type: String
+    Description: Environment name
+    AllowedValues:
+      - dev
+      - qa
+      - uat
+      - prod
+  webServerSecurityGroup:
+    Type: String
+    Description: Secuirty Group
+  imageId:
+    Type: String
+    Description: AMI ID
+  instanceType:
+    Type: String
+    Description: EC2 instance type
+  userData:
+    Type: String
+    Description: The user data script to make available to the instance
+  exportedEC2Name:
+    Type: String
+    Description: Name from whcich you want to export
+  availabilityZone:
+    Type: String
+    Description: Name of Availability Zone
+  subnetId:
+    Type: String
+    Description: Taking an inout the exported value
+  
+Resources:
+
+  ec2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      SecurityGroupIds: 
+        - !Ref webServerSecurityGroup 
+        # - !GetAtt [ publicSecurityGroup, GroupId]
+      ImageId: !Ref imageId
+      InstanceType: !Ref instanceType
+      AvailabilityZone: !Ref availabilityZone
+      SubnetId: !Ref subnetId
+      BlockDeviceMappings: 
+      - DeviceName: "/dev/sdm"
+        Ebs: 
+          VolumeType: "io1"
+          Iops: "200"
+          DeleteOnTermination: "true"
+          VolumeSize: "20"
+      Tags:
+          - Key: ec2InstanceName
+            Value: !Sub ${project}-${app}-${env}-ec2
+          - Key: project
+            Value: !Ref project
+          - Key: app
+            Value: !Ref app
+          - Key: environment
+            Value: !Ref env
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash
+            yum -y update
+            sudo yum install -y httpd
+            sudo systemctl start httpd
+            sudo echo '<h1>${userData} ${AWS::Region}</h1>' > /var/www/html/index.html
+
+Outputs:
+  ec2Instance:
+    Value: !Ref ec2Instance
+    Export:
+      Name: !Sub "${project}-${app}-${env}-${exportedEC2Name}"

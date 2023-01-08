@@ -1,0 +1,62 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: CloudFormation template for Security Group
+Parameters:
+  project:
+    Type: String
+    Description: Project name
+  app:
+    Type: String
+    Description: Application name
+  env:
+    Type: String
+    Description: Environment name
+    AllowedValues:
+      - dev
+      - qa
+      - uat
+      - prod
+  publicSecurityGroupCidr:
+    Type: String
+    Description: The IPv4 address range, in CIDR format
+  vpcId:
+    Type: String
+    Description: VPC ID
+  
+  
+Resources:
+  publicSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref vpcId
+      GroupDescription: Specifies a security group
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: !Ref publicSecurityGroupCidr
+        - IpProtocol: tcp
+          FromPort: '443'
+          ToPort: '443'
+          CidrIp: !Ref publicSecurityGroupCidr
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: !Ref publicSecurityGroupCidr
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: !Ref publicSecurityGroupCidr
+      Tags:
+        - Key: name
+          Value: !Sub ${project}-${app}-${env}-securityGroup
+        - Key: project
+          Value: !Ref project
+        - Key: app
+          Value: !Ref app
+        - Key: environment
+          Value: !Ref env
+
+Outputs:
+  publicSecurityGroupId:
+    Value: !GetAtt publicSecurityGroup.GroupId
+    Export:
+      Name: !Sub "${project}-${app}-${env}-publicSecurityGroupId"
